@@ -1092,7 +1092,8 @@ Adyar Drainage Zone,6.0,42.1,0.19,48</pre>
     }
   }
 
-  $("b-report").addEventListener("click", openReport);
+  var rb = $("b-report");
+if (rb) rb.addEventListener("click", openReport);
 
   function downloadTemplate() {
     var text = "location,ph,turbidity,metals,bod\nMunicipal Intake,7.2,3.5,0.02,12\nAmbattur Industrial Plant,9.4,62,0.52,92\nAdyar Drainage Zone,6.0,42.1,0.19,48\n";
