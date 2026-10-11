@@ -12,7 +12,7 @@ import math
 import os
 import random
 
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, Response, jsonify, render_template, request
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Works whether index.html sits in a templates/ folder or next to app.py.
@@ -191,7 +191,7 @@ def index():
     html = render_template("index.html")
     # Adds the graphs (Evaluation tab + score line chart) without editing index.html.
     if "graphs.js" not in html:
-        tag = '<script src="/static/graphs.js?v=2" defer></script>'
+        tag = '<script src="/static/graphs.js?v=3" defer></script>'
         html = html.replace("</body>", tag + "\n</body>", 1) if "</body>" in html else html + tag
     return html
 
@@ -725,6 +725,37 @@ def api_evaluate_labelled():
     return jsonify(_slim(evaluate(rows, n_boot=100, include_robustness=False)))
 
 
+# ---------------------------------------------------------- PDF reports (added)
+
+def _pdf_response(builder_name, arg, filename):
+    """Build a PDF with report_pdf.<builder_name>(arg) and return it as a download."""
+    try:
+        import report_pdf
+    except ImportError:
+        return jsonify(error="PDF export needs the 'reportlab' package. Add 'reportlab' to requirements.txt and redeploy."), 503
+    pdf = getattr(report_pdf, builder_name)(arg)
+    return Response(pdf, mimetype="application/pdf",
+                    headers={"Content-Disposition": 'attachment; filename="%s"' % filename, "Cache-Control": "no-store"})
+
+
+@app.post("/report/readings.pdf")
+def report_readings_pdf():
+    data = request.get_json(silent=True) or {}
+    raw = data.get("readings")
+    if not isinstance(raw, list):
+        return jsonify(error="Send a JSON body like {\"readings\": [...]}."), 400
+    rows = [r for r in (clean_reading(x) for x in raw[:MAX_ROWS]) if r]
+    if not rows:
+        return jsonify(error="There are no readings to put in a report yet. Add one first."), 400
+    return _pdf_response("build_readings_pdf", analyse(rows), "auraflow-water-quality-report.pdf")
+
+
+@app.get("/report/evaluation.pdf")
+def report_evaluation_pdf():
+    n, seed, noise = _eval_args()
+    return _pdf_response("build_evaluation_pdf", _slim(_evaluation(n, seed, noise)), "auraflow-evaluation-report.pdf")
+
+
 @app.errorhandler(413)
 def too_large(_):
     return jsonify(error="That file is over 1 MB."), 413
@@ -739,4 +770,3 @@ def headers(resp):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=False)
-    
