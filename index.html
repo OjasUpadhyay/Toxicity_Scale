@@ -447,7 +447,10 @@ pre.csv { background: var(--field); border: 1px solid var(--line); border-radius
         <section aria-labelledby="h-hash">
           <h2 id="h-hash">Data fingerprint</h2>
           <p class="hash" id="hash">–</p>
-          <button class="btn" id="b-export" type="button">Download report (CSV)</button>
+         <div class="row">
+  <button class="btn primary" id="b-report" type="button">Report with graph</button>
+  <button class="btn" id="b-export" type="button">Download report (CSV)</button>
+</div>
           <p class="note">The fingerprint is a SHA-256 hash of the readings. Change any value and it changes. It is not a tamper-proof ledger.</p>
         </section>
       </div>
