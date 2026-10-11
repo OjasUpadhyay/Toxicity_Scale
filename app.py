@@ -78,6 +78,80 @@ def clean_reading(obj):
     return out
 
 
+# ------------------------------------------------- drinking-water check
+# Compares readings with drinking-water guidance (BIS IS 10500 / WHO / CPCB source classes).
+# It covers only four measurements. Germs (coliforms, E. coli) and most chemicals are NOT tested,
+# so the best possible result is "passes these checks", never "safe".
+def _chk(key, name, value, status, note):
+    return {"key": key, "name": name, "value": value, "status": status, "note": note}
+
+
+def drinking_check(r):
+    ph, ntu, metals, bod = r["ph"], r["turbidity"], r["metals"], r["bod"]
+    checks = []
+
+    if 6.5 <= ph <= 8.5:
+        checks.append(_chk("ph", "pH", f"{ph:.2f}", "pass", "Inside the 6.5 to 8.5 range BIS accepts for drinking water."))
+    else:
+        side = "acidic" if ph < 7 else "alkaline"
+        if 6.0 <= ph <= 9.0:
+            checks.append(_chk("ph", "pH", f"{ph:.2f}", "check", f"Slightly {side}. Outside the 6.5 to 8.5 range, so it needs adjusting."))
+        else:
+            checks.append(_chk("ph", "pH", f"{ph:.2f}", "fail", f"Too {side} to drink. It can irritate and, if acidic, corrode pipes and release metals."))
+
+    if ntu <= 1:
+        checks.append(_chk("turbidity", "Turbidity", f"{ntu:.2f} NTU", "pass", "At or below 1 NTU, the BIS acceptable limit."))
+    elif ntu <= 5:
+        checks.append(_chk("turbidity", "Turbidity", f"{ntu:.2f} NTU", "check", "Above the 1 NTU acceptable limit. BIS allows up to 5 NTU only when no better source exists."))
+    else:
+        checks.append(_chk("turbidity", "Turbidity", f"{ntu:.2f} NTU", "fail", "Too cloudy. Particles can shield germs from disinfectant."))
+
+    if metals <= 0.01:
+        checks.append(_chk("metals", "Metals", f"{metals:.3f} ppm", "pass", "At or below 0.01 ppm, the guideline for lead and arsenic. A lab test would confirm each metal separately."))
+    elif metals <= 0.1:
+        checks.append(_chk("metals", "Metals", f"{metals:.3f} ppm", "check", "Above 0.01 ppm, so lead or arsenic could be over their guideline. Test to find out which metals are present."))
+    else:
+        checks.append(_chk("metals", "Metals", f"{metals:.3f} ppm", "fail", "Well above the guideline values for toxic metals such as lead, arsenic and chromium."))
+
+    if bod <= 2:
+        checks.append(_chk("bod", "BOD", f"{bod:.1f} mg/L", "pass", "At or below 2 mg/L, the CPCB class for a source that needs only disinfection."))
+    elif bod <= 3:
+        checks.append(_chk("bod", "BOD", f"{bod:.1f} mg/L", "check", "Between 2 and 3 mg/L. Usable as a source only with conventional treatment: settling, filtering, then disinfecting."))
+    else:
+        checks.append(_chk("bod", "BOD", f"{bod:.1f} mg/L", "fail", "Above 3 mg/L means heavy organic pollution, often sewage, which brings germs. Not suitable as a drinking source."))
+
+    status = {c["key"]: c["status"] for c in checks}
+    worst = "fail" if "fail" in status.values() else ("check" if "check" in status.values() else "pass")
+
+    steps = []
+    if status["turbidity"] != "pass":
+        steps.append("Clear the water first, because cloudy water defeats disinfection. Let it settle in a clean, covered container for several hours, then pour the clear water through a clean cloth or a sand or ceramic filter. Treatment plants add a coagulant such as alum, let the particles settle, then filter.")
+    if status["ph"] != "pass":
+        if ph < 7:
+            steps.append("Raise the pH. A calcite (neutralising) filter or controlled soda-ash dosing does this, and it also stops acidic water corroding pipes.")
+        else:
+            steps.append("Lower the pH. This needs controlled acid or CO2 dosing, usually done by a water-treatment professional. Blending with a neutral source can also help.")
+    if status["metals"] != "pass":
+        steps.append("Find out which metals are present with a lab test, because removal depends on the metal. Reverse osmosis removes many dissolved metals. Arsenic usually needs iron-based or activated-alumina media. For lead, use a filter certified to remove lead. Boiling removes none of them.")
+    if status["bod"] == "fail":
+        steps.append("Don't use this as a drinking source if you have any alternative. Organic pollution usually means sewage or industrial waste, bringing germs and chemicals. If it is the only source, it needs full treatment (settling, filtering, disinfecting) and regular lab testing.")
+    elif status["bod"] == "check":
+        steps.append("Treat the organic load conventionally: settle, filter, then disinfect. Re-test afterwards.")
+    steps.append("Disinfect clear water: bring it to a rolling boil for at least one minute, or use chlorine tablets as directed. UV works only on clear water. Disinfection kills germs but does not remove metals or chemicals.")
+    steps.append("Before relying on it for drinking, have an accredited lab test it, including coliform bacteria. This tool cannot test for germs.")
+
+    if worst == "fail":
+        level, label = "high", "Not drinkable as it is"
+        summary = "At least one reading is outside drinking-water limits. Don't drink it untreated. The steps below show what to fix."
+    elif worst == "check":
+        level, label = "mid", "Not confirmed: treat and test first"
+        summary = "No reading is far out of range, but at least one is borderline or needs a closer look. Treat it and have it tested before drinking."
+    else:
+        level, label = "low", "Passes these four checks"
+        summary = "That is not a safety guarantee. Germs and most chemicals were not tested. Disinfect it, and confirm with a lab before relying on it."
+    return {"level": level, "label": label, "summary": summary, "checks": checks, "steps": steps}
+
+
 def analyse(rows):
     enriched = []
     for r in rows:
@@ -92,6 +166,7 @@ def analyse(rows):
             "response": response,
             "penalties": {k: round(v, 3) for k, v in p.items()},
             "driver": max(p, key=p.get),
+            "drink": drinking_check(r),
         })
     n = len(enriched)
     stats = {
