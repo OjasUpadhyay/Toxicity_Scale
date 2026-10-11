@@ -194,6 +194,15 @@ table.ref caption { text-align: left; color: var(--muted); padding: 0 0 10px; fo
 .btn.icon { width: 44px; padding: 0; }
 .btn.icon svg { width: 22px; height: 22px; display: block; }
 .btn.icon[aria-pressed=true] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.verdict.big { font-size: 1.4rem; font-family: var(--display); margin: 0 0 6px; }
+.chip { display: inline-block; padding: 1px 11px; border-radius: 99px; border: 1.5px solid currentColor; font-size: .8rem; font-weight: 600; }
+.chip[data-status=pass] { color: var(--ok); } .chip[data-status=check] { color: var(--warn); } .chip[data-status=fail] { color: var(--bad); }
+td.wrapcell { white-space: normal; min-width: 260px; color: var(--muted); }
+.treat { margin: 8px 0 0; padding-left: 1.3em; max-width: 78ch; }
+.treat li { margin-bottom: 10px; }
+.drink-wrap h3 { font-size: 1.1rem; margin: 22px 0 6px; }
+.callout { border-left: 3px solid var(--warn); background: var(--panel); border-radius: 0 10px 10px 0; padding: 14px 18px; margin: 18px 0; max-width: 78ch; }
+.callout p:last-child { margin-bottom: 0; }
 /* facts + guide */
 .facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px 52px; padding: 0; margin: 0 0 28px; list-style: none; }
 .facts li { border-left: 3px solid var(--accent); padding-left: 18px; }
@@ -442,6 +451,11 @@ pre.csv { background: var(--field); border: 1px solid var(--line); border-radius
           <p class="note">The fingerprint is a SHA-256 hash of the readings. Change any value and it changes. It is not a tamper-proof ledger.</p>
         </section>
       </div>
+
+      <section class="drink-wrap" aria-labelledby="h-drink">
+        <h2 id="h-drink">Is it drinkable?</h2>
+        <div id="drink"></div>
+      </section>
     </div>
   </div>
 <div id="view-guide" hidden>
@@ -452,6 +466,7 @@ pre.csv { background: var(--field); border: 1px solid var(--line); border-radius
         <li><a href="#g-start">Quick start</a></li>
         <li><a href="#g-sample">Taking a sample</a></li>
         <li><a href="#g-measures">The four measurements</a></li>
+        <li><a href="#g-treat">Making water safer</a></li>
         <li><a href="#g-results">Reading your results</a></li>
         <li><a href="#g-faq">Questions</a></li>
       </ul>
@@ -511,16 +526,42 @@ pre.csv { background: var(--field); border: 1px solid var(--line); border-radius
         <p><b>How to measure.</b> A laboratory. The five-day test can't be done on the spot.</p>
       </div>
 
+      <h2 id="g-treat">Making water safer to drink</h2>
+      <p>Work in this order. Each step makes the next one work better.</p>
+      <ol>
+        <li><b>Clear it.</b> Let the water settle, then filter it through clean cloth, sand or a ceramic candle. Disinfectants and UV light work poorly in cloudy water.</li>
+        <li><b>Fix the chemistry.</b> Adjust pH, and remove metals with a method that suits the metal. This is the step simple home methods usually can't do.</li>
+        <li><b>Disinfect.</b> Boil clear water at a rolling boil for at least one minute, or use chlorine or UV.</li>
+        <li><b>Test.</b> Only a laboratory can confirm the water is safe, including for bacteria.</li>
+      </ol>
+      <div class="tablewrap">
+        <table class="ref">
+          <caption>What each method does and doesn't do</caption>
+          <thead><tr><th scope="col">Method</th><th scope="col">Helps with</th><th scope="col">Doesn't help with</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Boiling</th><td>Kills bacteria, viruses and parasites</td><td>Metals, chemicals and salts. They stay in the water.</td></tr>
+            <tr><th scope="row">Cloth, sand or ceramic filter</th><td>Cloudiness and larger particles</td><td>Dissolved metals and chemicals. Not reliable against germs on its own.</td></tr>
+            <tr><th scope="row">Activated-carbon filter</th><td>Taste, smell, some chemicals</td><td>Germs and most metals, unless the filter is certified for them</td></tr>
+            <tr><th scope="row">Reverse osmosis</th><td>Many dissolved metals and salts</td><td>Guaranteed germ removal. It is usually paired with UV or chlorine.</td></tr>
+            <tr><th scope="row">UV light</th><td>Kills germs in clear water</td><td>Cloudy water, metals and chemicals</td></tr>
+            <tr><th scope="row">Chlorine</th><td>Kills most bacteria and viruses</td><td>Metals, and some parasites such as Cryptosporidium</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="callout"><b>Water that has had sewage or industrial waste in it</b> (high BOD, or any metals reading far over the limits) isn't a job for home treatment. Use a different source and ask your water supplier or pollution control board for help.</p>
+
       <h2 id="g-results">Reading your results</h2>
       <ul>
         <li>Start with the status words and the tube colors, then select the highest-scoring node.</li>
         <li>The highlighted bar in the inspector is the measurement driving that score. That tells you what to investigate first.</li>
+        <li>Scroll to "Is it drinkable?" under a selected node. It marks each measurement Pass, Check or Fail against drinking-water guidance and lists treatment steps in order.</li>
         <li>Compare places and dates with each other. The score is better at ranking and spotting change than at giving a verdict.</li>
       </ul>
       <p class="callout"><b>If you think water is really contaminated:</b> don't drink it or cook with it. Boiling does not remove metals or most chemicals. Have it tested at an accredited laboratory and tell your local water supplier or your state pollution control board.</p>
 
       <h2 id="g-faq">Questions</h2>
       <details><summary>Is this an official safety rating?</summary><div><p>No. The score is a project-defined illustration. It is not a BIS formula and not a certificate that water is safe to drink. Use it to learn and to compare places, not to decide whether water is safe.</p></div></details>
+      <details><summary>How does the drinking check work, and can I trust it?</summary><div><p>It compares pH, turbidity, metals and BOD with drinking-water guidance: BIS IS 10500 for pH and turbidity, the WHO guideline for lead and arsenic, and CPCB source-water classes for BOD. The best result is "passes these four checks", never "safe", because germs and most chemicals aren't measured. Treat it as a first screen and confirm with a lab.</p></div></details>
       <details><summary>Why does one bad reading raise the score so much?</summary><div><p>If any single measurement reaches its limit, the score is at least 60, which puts the node in the high-risk band. Without that rule, one dangerous reading could be averaged away by three clean ones.</p></div></details>
       <details><summary>Where do the score's limits come from?</summary><div><p>They are demonstration cut-offs: pH 3 units from neutral, 100 NTU, 1 ppm metals and 150 mg/L BOD. Real limits depend on the use of the water and are set per substance. For drinking water, check the current edition of BIS IS 10500 or the latest WHO guidelines.</p></div></details>
       <details><summary>Where does my data go?</summary><div><p>Your readings are saved in this browser. When you add or change a reading they are sent to the server so it can calculate the scores, and the server doesn't keep them. Clearing your browser data removes them.</p></div></details>
@@ -751,6 +792,7 @@ Adyar Drainage Zone,6.0,42.1,0.19,48</pre>
   function renderInspector() {
     var box = $("inspector");
     box.textContent = "";
+    $("drink").textContent = "";
     if (!analysis.rows.length || selected == null) {
       box.appendChild(el("p", "empty", "Select a node to see what is driving its score."));
       return;
@@ -775,6 +817,47 @@ Adyar Drainage Zone,6.0,42.1,0.19,48</pre>
     box.appendChild(el("p", "note", r.wti >= 25
       ? LABELS[r.driver] + " is pushing this score up the most. Suggested simulated response: " + r.response + "."
       : "All four measurements are in a comfortable range. Suggested simulated response: " + r.response + "."));
+    renderDrink(r);
+  }
+
+  var STATUS_TEXT = { pass: "Pass", check: "Check", fail: "Fail" };
+  function renderDrink(r) {
+    var d = r.drink, box = $("drink");
+    box.textContent = "";
+    box.appendChild(el("p", null, "Drinking check for " + r.location));
+    var head = el("p", "verdict big", d.label);
+    head.dataset.level = d.level;
+    box.appendChild(head);
+    box.appendChild(el("p", null, d.summary));
+
+    var wrap = el("div", "tablewrap");
+    var table = el("table");
+    table.appendChild(el("caption", "sr", "Drinking-water checks for " + r.location));
+    var thead = el("thead"), htr = el("tr");
+    ["Measurement", "Reading", "Result", "What it means"].forEach(function (h) {
+      var th = el("th", null, h); th.scope = "col"; htr.appendChild(th);
+    });
+    thead.appendChild(htr); table.appendChild(thead);
+    var tb = el("tbody");
+    d.checks.forEach(function (c) {
+      var tr = el("tr");
+      var th = el("th", null, c.name); th.scope = "row"; th.style.fontWeight = "600"; tr.appendChild(th);
+      tr.appendChild(el("td", "num", c.value));
+      var td = el("td"), chip = el("span", "chip", STATUS_TEXT[c.status]);
+      chip.dataset.status = c.status; td.appendChild(chip); tr.appendChild(td);
+      tr.appendChild(el("td", "wrapcell", c.note));
+      tb.appendChild(tr);
+    });
+    table.appendChild(tb); wrap.appendChild(table); box.appendChild(wrap);
+
+    box.appendChild(el("h3", null, d.level === "low" ? "Before you drink it" : "How to make it safer"));
+    var ol = el("ol", "treat");
+    d.steps.forEach(function (t) { ol.appendChild(el("li", null, t)); });
+    box.appendChild(ol);
+
+    var note = el("div", "callout");
+    note.appendChild(el("p", null, "This check compares four measurements with drinking-water guidance (BIS IS 10500, WHO and CPCB source classes). It can't test for germs or most chemicals, so it never means \"safe\". The risk score ranks places against each other. This check asks a different question: could this water be drunk?"));
+    box.appendChild(note);
   }
 
   // ---------- landing demo (scored by the server, same as the monitor)
