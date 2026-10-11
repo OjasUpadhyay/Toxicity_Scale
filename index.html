@@ -190,6 +190,44 @@ tbody tr.sel { background: color-mix(in srgb, var(--accent) 10%, transparent); }
 table.ref th, table.ref td { white-space: normal; }
 table.ref caption { text-align: left; color: var(--muted); padding: 0 0 10px; font-size: .9rem; }
 
+
+/* facts + guide */
+.facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px 52px; padding: 0; margin: 0 0 28px; list-style: none; }
+.facts li { border-left: 3px solid var(--accent); padding-left: 18px; }
+.facts h3 { font-size: 1.15rem; margin-bottom: 6px; }
+.facts p { margin: 0; color: var(--muted); }
+.guide { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: clamp(24px, 5vw, 68px); padding-top: clamp(28px, 5vw, 56px); padding-bottom: 70px; align-items: start; }
+.toc { position: sticky; top: 84px; }
+.toc-title { font: 700 .95rem var(--display); margin: 0 0 10px; }
+.toc ul { list-style: none; padding: 0; margin: 0; border-left: 1px solid var(--line); }
+.toc a { display: block; padding: 8px 14px; color: var(--muted); text-decoration: none; margin-left: -1px; border-left: 2px solid transparent; }
+.toc a:hover { color: var(--text); border-left-color: var(--accent); }
+.prose { max-width: 70ch; }
+.prose h1 { font-size: clamp(2rem, 4vw, 3rem); line-height: 1.08; margin-bottom: 14px; }
+.prose h2 { font-size: 1.6rem; margin: 52px 0 12px; }
+.prose h3 { font-size: 1.25rem; margin: 0 0 8px; }
+.prose p { margin: 0 0 12px; }
+.prose ul, .prose ol { padding-left: 1.25em; margin: 0 0 14px; }
+.prose li { margin-bottom: 7px; }
+.prose .lede { font-size: 1.1rem; }
+.measure { border-top: 1px solid var(--line); padding: 22px 0 8px; }
+.measure p b { color: var(--link); font-weight: 600; }
+.callout { border-left: 3px solid var(--warn); background: var(--panel); border-radius: 0 10px 10px 0; padding: 14px 18px; margin: 18px 0; }
+.callout p:last-child { margin-bottom: 0; }
+details { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); margin-bottom: 10px; }
+summary { cursor: pointer; padding: 13px 16px; font-weight: 600; min-height: 44px; }
+summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+details > div { padding: 0 16px 14px; color: var(--muted); }
+details > div p:last-child { margin-bottom: 0; }
+pre.csv { background: var(--field); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; overflow-x: auto; font-size: .85rem; margin: 10px 0 14px; color: var(--text); }
+.file .linkbtn { justify-self: start; font-size: .88rem; padding: 4px 0; }
+@media (max-width: 920px) {
+  .facts { grid-template-columns: 1fr; }
+  .guide { grid-template-columns: 1fr; }
+  .toc { position: static; }
+  .toc ul { display: flex; flex-wrap: wrap; border-left: 0; gap: 4px 10px; }
+  .toc a { border: 1px solid var(--line); border-radius: 99px; padding: 6px 14px; margin: 0; }
+}
 @media (max-width: 920px) {
   .hero-grid { grid-template-columns: 1fr; }
   .steps { grid-template-columns: 1fr; }
@@ -219,6 +257,7 @@ table.ref caption { text-align: left; color: var(--muted); padding: 0 0 10px; fo
     <nav aria-label="Main">
       <a href="#home" id="nav-home">Home</a>
       <a href="#monitor" id="nav-app">Monitor</a>
+      <a href="#guide" id="nav-guide">Guide</a>
     </nav>
     <div class="tools">
       <button class="btn small" id="t-size" type="button" aria-pressed="false">Larger text</button>
@@ -287,7 +326,21 @@ table.ref caption { text-align: left; color: var(--muted); padding: 0 0 10px; fo
     </div>
   </section>
 
-  <section class="band endcta" aria-labelledby="h-end">
+  <section class="band" aria-labelledby="h-facts">
+    <div class="wrap">
+      <h2 id="h-facts">Good to know</h2>
+      <p class="sub">A few things worth knowing before you read any water report.</p>
+      <ul class="facts">
+        <li><h3>pH is a logarithmic scale</h3><p>Every step is a tenfold change. Water at pH 5 is ten times more acidic than water at pH 6, and a hundred times more than pH 7.</p></li>
+        <li><h3>Clear water isn't always clean</h3><p>Turbidity only measures cloudiness. Water can look perfectly clear and still carry dissolved metals, chemicals or germs.</p></li>
+        <li><h3>Metals matter in tiny amounts</h3><p>For both lead and arsenic, the WHO drinking-water guideline value is 0.01 mg/L. In water, 1 ppm is about 1 mg/L, so that is 0.01 ppm.</p></li>
+        <li><h3>BOD is about oxygen</h3><p>Bacteria use up oxygen as they break down organic waste. The more waste, the more oxygen they use, and the less is left for fish.</p></li>
+      </ul>
+      <a class="btn" href="#guide">Read the full guide</a>
+    </div>
+  </section>
+
+  <section class="band alt endcta" aria-labelledby="h-end">
     <div class="wrap">
       <h2 id="h-end">Try it with your own readings</h2>
       <p>Sample data is already loaded, so you can explore first and replace it whenever you like.</p>
@@ -332,6 +385,7 @@ table.ref caption { text-align: left; color: var(--muted); padding: 0 0 10px; fo
         <label for="f-csv" class="sr">Choose a CSV file</label>
         <input type="file" id="f-csv" accept=".csv,text/csv" aria-describedby="csv-hint">
         <p class="hint" id="csv-hint">Columns: location, ph, turbidity, metals, bod. Importing replaces the current readings.</p>
+        <button class="linkbtn" type="button" data-template>Download an example CSV</button>
       </div>
 
       <hr class="divider">
@@ -386,6 +440,98 @@ table.ref caption { text-align: left; color: var(--muted); padding: 0 0 10px; fo
         </section>
       </div>
     </div>
+  </div>
+<div id="view-guide" hidden>
+  <div class="wrap guide">
+    <nav class="toc" aria-label="On this page">
+      <p class="toc-title">On this page</p>
+      <ul>
+        <li><a href="#g-start">Quick start</a></li>
+        <li><a href="#g-sample">Taking a sample</a></li>
+        <li><a href="#g-measures">The four measurements</a></li>
+        <li><a href="#g-results">Reading your results</a></li>
+        <li><a href="#g-faq">Questions</a></li>
+      </ul>
+    </nav>
+
+    <article class="prose">
+      <h1 id="h-guide" tabindex="-1">A short guide to water testing</h1>
+      <p class="lede">Written for students, teachers and community groups. You don't need a science background. You do need a clean bottle and a way to measure.</p>
+
+      <h2 id="g-start">Quick start</h2>
+      <ol>
+        <li>Give each place you test a name you'll recognise later, such as "Lake inlet" or "School tap".</li>
+        <li>Measure pH and turbidity on site with a meter or test kit. Metals and BOD need a laboratory.</li>
+        <li>Open the <a href="#monitor">monitor</a> and enter the numbers. Leave a value as measured, even if it looks odd.</li>
+        <li>Check the test tubes. The fuller and redder the tube, the more attention that place needs.</li>
+        <li>Select a node to see which measurement is pushing its score up, then download the report to share.</li>
+      </ol>
+      <p>Have many readings already? Import them from a CSV file. <button class="btn small" type="button" data-template>Download an example CSV</button></p>
+
+      <h2 id="g-sample">Taking a sample</h2>
+      <ul>
+        <li>Use a clean bottle. Rinse it three times with the water you are about to collect.</li>
+        <li>Collect from the middle of the flow, not from the edge or the surface scum. Don't touch the inside of the bottle or the cap.</li>
+        <li>Write the place, date and time on the bottle straight away.</li>
+        <li>Keep it cool and out of sunlight, and measure as soon as you can. pH and turbidity drift as a sample sits.</li>
+        <li>Collect from the same spot, at similar times, if you want readings you can compare.</li>
+      </ul>
+      <p class="callout"><b>Stay safe.</b> Wear gloves near drains, industrial outlets or anything that smells of chemicals, and wash your hands afterwards. Never taste a sample to check it.</p>
+
+      <h2 id="g-measures">The four measurements</h2>
+      <div class="measure">
+        <h3>pH</h3>
+        <p><b>What it is.</b> How acidic or basic the water is. 7 is neutral, lower is acidic, higher is basic. The scale is logarithmic, so each step is a tenfold change.</p>
+        <p><b>What's typical.</b> India's drinking-water standard (BIS IS 10500) accepts 6.5 to 8.5.</p>
+        <p><b>Why it matters.</b> Very low pH can corrode pipes and release metals into the water. High pH makes chlorine less effective at killing germs.</p>
+        <p><b>How to measure.</b> A pH meter, or test strips if you only need a rough idea.</p>
+      </div>
+      <div class="measure">
+        <h3>Turbidity (NTU)</h3>
+        <p><b>What it is.</b> How cloudy the water is, caused by silt, algae, organic matter, sewage or industrial discharge.</p>
+        <p><b>What's typical.</b> BIS lists 1 NTU as acceptable for drinking water. The WHO says water below 1 NTU is best for effective disinfection.</p>
+        <p><b>Why it matters.</b> Particles can shield germs from disinfectant, so cloudy water is harder to make safe.</p>
+        <p><b>How to measure.</b> A turbidity meter, or a turbidity tube for a simple field estimate.</p>
+      </div>
+      <div class="measure">
+        <h3>Metals (ppm)</h3>
+        <p><b>What it is.</b> Dissolved metals such as lead, arsenic, chromium or cadmium, usually from industry, mining or old pipes. AuraFlow uses a single combined number for simplicity. Real limits are set metal by metal.</p>
+        <p><b>What's typical.</b> The guideline value for both lead and arsenic is 0.01 mg/L (about 0.01 ppm) from the WHO and BIS.</p>
+        <p><b>Why it matters.</b> Several metals are harmful even in very small amounts, and some build up in the body over time.</p>
+        <p><b>How to measure.</b> A laboratory test. A few specialist field kits exist, but treat them as a screening step.</p>
+      </div>
+      <div class="measure">
+        <h3>BOD (mg/L)</h3>
+        <p><b>What it is.</b> Biochemical oxygen demand: how much oxygen bacteria use up breaking down organic waste in the sample, usually measured over five days at 20 °C.</p>
+        <p><b>What's typical.</b> Clean rivers are usually a few mg/L or less. Untreated sewage is often in the hundreds.</p>
+        <p><b>Why it matters.</b> High BOD means a water body can run short of oxygen, which harms fish and other aquatic life.</p>
+        <p><b>How to measure.</b> A laboratory. The five-day test can't be done on the spot.</p>
+      </div>
+
+      <h2 id="g-results">Reading your results</h2>
+      <ul>
+        <li>Start with the status words and the tube colors, then select the highest-scoring node.</li>
+        <li>The highlighted bar in the inspector is the measurement driving that score. That tells you what to investigate first.</li>
+        <li>Compare places and dates with each other. The score is better at ranking and spotting change than at giving a verdict.</li>
+      </ul>
+      <p class="callout"><b>If you think water is really contaminated:</b> don't drink it or cook with it. Boiling does not remove metals or most chemicals. Have it tested at an accredited laboratory and tell your local water supplier or your state pollution control board.</p>
+
+      <h2 id="g-faq">Questions</h2>
+      <details><summary>Is this an official safety rating?</summary><div><p>No. The score is a project-defined illustration. It is not a BIS formula and not a certificate that water is safe to drink. Use it to learn and to compare places, not to decide whether water is safe.</p></div></details>
+      <details><summary>Why does one bad reading raise the score so much?</summary><div><p>If any single measurement reaches its limit, the score is at least 60, which puts the node in the high-risk band. Without that rule, one dangerous reading could be averaged away by three clean ones.</p></div></details>
+      <details><summary>Where do the score's limits come from?</summary><div><p>They are demonstration cut-offs: pH 3 units from neutral, 100 NTU, 1 ppm metals and 150 mg/L BOD. Real limits depend on the use of the water and are set per substance. For drinking water, check the current edition of BIS IS 10500 or the latest WHO guidelines.</p></div></details>
+      <details><summary>Where does my data go?</summary><div><p>Your readings are saved in this browser. When you add or change a reading they are sent to the server so it can calculate the scores, and the server doesn't keep them. Clearing your browser data removes them.</p></div></details>
+      <details><summary>What should my CSV look like?</summary><div>
+        <p>One row per place, with these column names (capitals don't matter):</p>
+        <pre class="csv">location,ph,turbidity,metals,bod
+Municipal Intake,7.2,3.5,0.02,12
+Adyar Drainage Zone,6.0,42.1,0.19,48</pre>
+        <p>Rows with missing or non-numeric values are skipped. Files up to 1 MB and 500 rows are accepted.</p>
+        <button class="btn small" type="button" data-template>Download an example CSV</button>
+      </div></details>
+
+      <p style="margin-top:36px"><a class="btn primary large" href="#monitor">Open the monitor</a></p>
+    </article>
   </div>
 </div>
 
@@ -468,22 +614,25 @@ table.ref caption { text-align: left; color: var(--muted); padding: 0 0 10px; fo
 
   // ---------- routing (#home / #monitor)
   var routed = false;
+  var VIEWS = { "#home": "home", "#monitor": "app", "#guide": "guide" };
+  var TITLES = { home: "AuraFlow · Water quality monitor", app: "Monitor · AuraFlow", guide: "Guide · AuraFlow" };
   function route() {
-    var h = location.hash;
-    if (h !== "#monitor" && h !== "#home" && h !== "") { return; } // in-page anchors like #how or #main
-    var app = h === "#monitor";
-    $("view-home").hidden = app;
-    $("view-app").hidden = !app;
-    var nh = $("nav-home"), na = $("nav-app");
-    if (app) { na.setAttribute("aria-current", "page"); nh.removeAttribute("aria-current"); }
-    else { nh.setAttribute("aria-current", "page"); na.removeAttribute("aria-current"); }
-    document.title = app ? "Monitor · AuraFlow" : "AuraFlow · Water quality monitor";
+    var h = location.hash || "#home";
+    var v = VIEWS[h];
+    if (!v) { return; } // in-page anchors like #how, #main or #g-sample
+    ["home", "app", "guide"].forEach(function (n) {
+      $("view-" + n).hidden = n !== v;
+      var a = $("nav-" + n);
+      if (!a) return;
+      if (n === v) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+    });
+    document.title = TITLES[v];
     if (routed) {
       window.scrollTo(0, 0);
-      $(app ? "h-app" : "h-home").focus({ preventScroll: true });
+      $("h-" + v).focus({ preventScroll: true });
     }
     routed = true;
-    if (app && analysis) render();
+    if (v === "app" && analysis) render();
   }
   window.addEventListener("hashchange", route);
 
@@ -703,6 +852,18 @@ table.ref caption { text-align: left; color: var(--muted); padding: 0 0 10px; fo
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
     say("Report downloaded.");
+  });
+
+  function downloadTemplate() {
+    var text = "location,ph,turbidity,metals,bod\nMunicipal Intake,7.2,3.5,0.02,12\nAmbattur Industrial Plant,9.4,62,0.52,92\nAdyar Drainage Zone,6.0,42.1,0.19,48\n";
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([text], { type: "text/csv" }));
+    a.download = "auraflow-example.csv";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("[data-template]"), function (b) {
+    b.addEventListener("click", downloadTemplate);
   });
 
   route();
