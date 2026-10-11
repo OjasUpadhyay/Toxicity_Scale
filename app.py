@@ -13,7 +13,13 @@ import os
 
 from flask import Flask, jsonify, render_template, request
 
-app = Flask(__name__, template_folder=".")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# Works whether index.html sits in a templates/ folder or next to app.py.
+TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
+if not os.path.isfile(os.path.join(TEMPLATE_DIR, "index.html")):
+    TEMPLATE_DIR = BASE_DIR
+
+app = Flask(__name__, template_folder=TEMPLATE_DIR)
 app.config["MAX_CONTENT_LENGTH"] = 1024 * 1024  # 1 MB upload limit
 MAX_ROWS = 500
 
