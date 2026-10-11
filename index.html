@@ -303,7 +303,7 @@ pre.csv { background: var(--field); border: 1px solid var(--line); border-radius
       <ol class="steps">
         <li><h3>Enter readings</h3><p>Type in a location with its pH, turbidity, metals and BOD values, or import a CSV file with many locations at once.</p></li>
         <li><h3>Get a score</h3><p>Each location is scored from 0 to 100 and labelled low risk, caution or high risk. A filled tube shows it at a glance.</p></li>
-        <li><h3>Find the cause</h3><p>Select a location to see which measurement drives its score, then download the full report as a CSV.</p></li>
+        <li><h3>Find the cause</h3><p>Select a location to see which measurement drives its score, then download the full report as a document with a graph, or as a CSV.</p></li>
       </ol>
     </div>
   </section>
@@ -440,7 +440,13 @@ pre.csv { background: var(--field); border: 1px solid var(--line); border-radius
         <section aria-labelledby="h-hash">
           <h2 id="h-hash">Data fingerprint</h2>
           <p class="hash" id="hash">–</p>
-          <button class="btn" id="b-export" type="button">Download report (CSV)</button>
+          <div class="row">
+            <form id="report-form" method="post" action="/api/report" style="display:block">
+              <input type="hidden" name="readings" id="report-data" value="">
+              <button class="btn primary" id="b-report" type="submit">Download full report</button>
+            </form>
+            <button class="btn" id="b-export" type="button">Download report (CSV)</button>
+          </div>
           <p class="note">The fingerprint is a SHA-256 hash of the readings. Change any value and it changes. It is not a tamper-proof ledger.</p>
         </section>
       </div>
@@ -938,6 +944,18 @@ Adyar Drainage Zone,6.0,42.1,0.19,48</pre>
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
     say("Report downloaded.");
+  });
+
+  // ---------- full report: a normal form post, the server replies with a file download
+  var reportForm = $("report-form");
+  if (reportForm) reportForm.addEventListener("submit", function (ev) {
+    if (!analysis || !analysis.rows.length) {
+      ev.preventDefault();
+      say("Add at least one reading before creating a report.", true);
+      return;
+    }
+    $("report-data").value = JSON.stringify(readings);
+    say("Report downloading. Open the file in any browser.");
   });
 
   function downloadTemplate() {
