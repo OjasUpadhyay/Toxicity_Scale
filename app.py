@@ -13,7 +13,7 @@ import os
 
 from flask import Flask, jsonify, render_template, request
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder=".")
 app.config["MAX_CONTENT_LENGTH"] = 1024 * 1024  # 1 MB upload limit
 MAX_ROWS = 500
 
