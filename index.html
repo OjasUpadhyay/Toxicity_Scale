@@ -81,7 +81,6 @@ h1:focus { outline: none; }
 .lede { font-size: 1.15rem; color: var(--muted); max-width: 52ch; margin: 0 0 28px; }
 .cta { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
 .hint { color: var(--muted); font-size: .85rem; margin: 0; }
-
 .demo { margin: 0; position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 24px; padding: 28px 22px 18px; box-shadow: 0 30px 60px rgba(0,0,0,.18); }
 .demo::before { content: ""; position: absolute; inset: 0; border-radius: 24px; pointer-events: none;
   background: repeating-radial-gradient(circle at 50% 110%, transparent 0 34px, color-mix(in srgb, var(--accent) 9%, transparent) 35px 36px); }
@@ -153,7 +152,6 @@ input:focus { border-color: var(--accent); }
 .file input::file-selector-button { background: var(--field); border: 1px solid var(--line); color: var(--text); border-radius: 8px; padding: 9px 14px; margin-right: 10px; cursor: pointer; min-height: 40px; }
 .status-line { min-height: 1.6em; font-size: .9rem; margin: 14px 0 0; color: var(--link); font-weight: 500; }
 .status-line.err { color: var(--bad); }
-
 .stats { display: grid; grid-template-columns: repeat(4, auto); justify-content: start; margin: 28px 0 32px; }
 .stat { padding: 0 28px; border-left: 1px solid var(--line); }
 .stat:first-child { padding-left: 0; border-left: 0; }
@@ -186,11 +184,8 @@ tbody tr.sel { background: color-mix(in srgb, var(--accent) 10%, transparent); }
 .param .val { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
 .note { color: var(--muted); font-size: .88rem; margin: 16px 0 0; }
 .hash { font: 400 .82rem/1.7 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; overflow-wrap: anywhere; margin: 0 0 14px; }
-
 table.ref th, table.ref td { white-space: normal; }
 table.ref caption { text-align: left; color: var(--muted); padding: 0 0 10px; font-size: .9rem; }
-
-
 .btn.icon { width: 44px; padding: 0; }
 .btn.icon svg { width: 22px; height: 22px; display: block; }
 .btn.icon[aria-pressed=true] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
@@ -203,6 +198,7 @@ td.wrapcell { white-space: normal; min-width: 260px; color: var(--muted); }
 .drink-wrap h3 { font-size: 1.1rem; margin: 22px 0 6px; }
 .callout { border-left: 3px solid var(--warn); background: var(--panel); border-radius: 0 10px 10px 0; padding: 14px 18px; margin: 18px 0; max-width: 78ch; }
 .callout p:last-child { margin-bottom: 0; }
+
 /* facts + guide */
 .facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px 52px; padding: 0; margin: 0 0 28px; list-style: none; }
 .facts li { border-left: 3px solid var(--accent); padding-left: 18px; }
@@ -259,7 +255,6 @@ pre.csv { background: var(--field); border: 1px solid var(--line); border-radius
 </head>
 <body>
 <a class="skip" href="#main">Skip to main content</a>
-
 <header class="top">
   <div class="top-in">
     <a class="logo" href="#home" aria-label="AuraFlow, home">
@@ -308,7 +303,7 @@ pre.csv { background: var(--field); border: 1px solid var(--line); border-radius
       <ol class="steps">
         <li><h3>Enter readings</h3><p>Type in a location with its pH, turbidity, metals and BOD values, or import a CSV file with many locations at once.</p></li>
         <li><h3>Get a score</h3><p>Each location is scored from 0 to 100 and labelled low risk, caution or high risk. A filled tube shows it at a glance.</p></li>
-        <li><h3>Find the cause</h3><p>Select a location to see which measurement drives its score, then download the full report as a CSV.</p></li>
+        <li><h3>Find the cause</h3><p>Select a location to see which measurement drives its score, then download the full report as a CSV or as a document with a graph.</p></li>
       </ol>
     </div>
   </section>
@@ -391,7 +386,6 @@ pre.csv { background: var(--field); border: 1px solid var(--line); border-radius
       <p class="status-line" id="status" role="status" aria-live="polite"></p>
 
       <hr class="divider">
-
       <h2>Import from CSV</h2>
       <div class="file">
         <label for="f-csv" class="sr">Choose a CSV file</label>
@@ -401,7 +395,6 @@ pre.csv { background: var(--field); border: 1px solid var(--line); border-radius
       </div>
 
       <hr class="divider">
-
       <div class="row">
         <button class="btn small" id="b-sample" type="button">Load sample data</button>
         <button class="btn small" id="b-clear" type="button">Clear all</button>
@@ -447,10 +440,10 @@ pre.csv { background: var(--field); border: 1px solid var(--line); border-radius
         <section aria-labelledby="h-hash">
           <h2 id="h-hash">Data fingerprint</h2>
           <p class="hash" id="hash">–</p>
-         <div class="row">
-  <button class="btn primary" id="b-report" type="button">Report with graph</button>
-  <button class="btn" id="b-export" type="button">Download report (CSV)</button>
-</div>
+          <div class="row">
+            <button class="btn primary" id="b-report" type="button">Report with graph</button>
+            <button class="btn" id="b-export" type="button">Download report (CSV)</button>
+          </div>
           <p class="note">The fingerprint is a SHA-256 hash of the readings. Change any value and it changes. It is not a tamper-proof ledger.</p>
         </section>
       </div>
@@ -461,6 +454,9 @@ pre.csv { background: var(--field); border: 1px solid var(--line); border-radius
       </section>
     </div>
   </div>
+</div>
+
+<!-- ================= GUIDE ================= -->
 <div id="view-guide" hidden>
   <div class="wrap guide">
     <nav class="toc" aria-label="On this page">
@@ -474,7 +470,6 @@ pre.csv { background: var(--field); border: 1px solid var(--line); border-radius
         <li><a href="#g-faq">Questions</a></li>
       </ul>
     </nav>
-
     <article class="prose">
       <h1 id="h-guide" tabindex="-1">A short guide to water testing</h1>
       <p class="lede">Written for students, teachers and community groups. You don't need a science background. You do need a clean bottle and a way to measure.</p>
@@ -581,7 +576,6 @@ Adyar Drainage Zone,6.0,42.1,0.19,48</pre>
     </article>
   </div>
 </div>
-
 </main>
 
 <footer>
@@ -593,6 +587,7 @@ Adyar Drainage Zone,6.0,42.1,0.19,48</pre>
 <script>
 (function () {
   "use strict";
+
   var KEY = "auraflow.readings.v1";
   var SAMPLE = [
     { location: "Municipal Intake", ph: 7.2, turbidity: 3.5, metals: 0.02, bod: 12 },
@@ -602,8 +597,8 @@ Adyar Drainage Zone,6.0,42.1,0.19,48</pre>
   var LABELS = { ph: "pH", turbidity: "Turbidity", metals: "Metals", bod: "BOD" };
   var UNITS = { ph: "", turbidity: " NTU", metals: " ppm", bod: " mg/L" };
   var DIGITS = { ph: 2, turbidity: 2, metals: 3, bod: 1 };
-  var root = document.documentElement;
 
+  var root = document.documentElement;
   var readings = load();
   var analysis = null;
   var selected = null;
@@ -616,6 +611,7 @@ Adyar Drainage Zone,6.0,42.1,0.19,48</pre>
     return n;
   }
   function clone(x) { return JSON.parse(JSON.stringify(x)); }
+
   function load() {
     try {
       var s = localStorage.getItem(KEY);
@@ -624,11 +620,13 @@ Adyar Drainage Zone,6.0,42.1,0.19,48</pre>
     return clone(SAMPLE);
   }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(readings)); } catch (e) {} }
+
   function say(msg, isError) {
     var s = $("status");
     s.textContent = msg;
     s.className = "status-line" + (isError ? " err" : "");
   }
+
   function api(path, opts) {
     return fetch(path, opts).then(function (res) {
       return res.json().catch(function () { return {}; }).then(function (body) {
@@ -637,6 +635,7 @@ Adyar Drainage Zone,6.0,42.1,0.19,48</pre>
       });
     });
   }
+
   function fmt(key, v) { return Number(v).toFixed(DIGITS[key]); }
 
   // ---------- preferences: text size + theme
@@ -662,7 +661,7 @@ Adyar Drainage Zone,6.0,42.1,0.19,48</pre>
   });
   syncPrefs();
 
-  // ---------- routing (#home / #monitor)
+  // ---------- routing (#home / #monitor / #guide)
   var routed = false;
   var VIEWS = { "#home": "home", "#monitor": "app", "#guide": "guide" };
   var TITLES = { home: "AuraFlow · Water quality monitor", app: "Monitor · AuraFlow", guide: "Guide · AuraFlow" };
@@ -789,6 +788,7 @@ Adyar Drainage Zone,6.0,42.1,0.19,48</pre>
       tr.appendChild(del);
       tbody.appendChild(tr);
     });
+
     renderInspector();
   }
 
@@ -832,7 +832,6 @@ Adyar Drainage Zone,6.0,42.1,0.19,48</pre>
     head.dataset.level = d.level;
     box.appendChild(head);
     box.appendChild(el("p", null, d.summary));
-
     var wrap = el("div", "tablewrap");
     var table = el("table");
     table.appendChild(el("caption", "sr", "Drinking-water checks for " + r.location));
@@ -852,12 +851,10 @@ Adyar Drainage Zone,6.0,42.1,0.19,48</pre>
       tb.appendChild(tr);
     });
     table.appendChild(tb); wrap.appendChild(table); box.appendChild(wrap);
-
     box.appendChild(el("h3", null, d.level === "low" ? "Before you drink it" : "How to make it safer"));
     var ol = el("ol", "treat");
     d.steps.forEach(function (t) { ol.appendChild(el("li", null, t)); });
     box.appendChild(ol);
-
     var note = el("div", "callout");
     note.appendChild(el("p", null, "This check compares four measurements with drinking-water guidance (BIS IS 10500, WHO and CPCB source classes). It can't test for germs or most chemicals, so it never means \"safe\". The risk score ranks places against each other. This check asks a different question: could this water be drunk?"));
     box.appendChild(note);
@@ -947,9 +944,6 @@ Adyar Drainage Zone,6.0,42.1,0.19,48</pre>
   });
 
   // ---------- report document (graph + details)
-  // Paste this block inside the main IIFE in index.html, right before `function downloadTemplate()`.
-  // It uses the existing `analysis`, `say`, `LABELS`, `UNITS` and `fmt` from that script.
-
   var REPORT_COLORS = { low: "#0a7a58", mid: "#b87a00", high: "#c62d47" };
 
   function h(s) {
@@ -1092,8 +1086,8 @@ Adyar Drainage Zone,6.0,42.1,0.19,48</pre>
     }
   }
 
-  var rb = $("b-report");
-if (rb) rb.addEventListener("click", openReport);
+  var reportBtn = $("b-report");
+  if (reportBtn) reportBtn.addEventListener("click", openReport);
 
   function downloadTemplate() {
     var text = "location,ph,turbidity,metals,bod\nMunicipal Intake,7.2,3.5,0.02,12\nAmbattur Industrial Plant,9.4,62,0.52,92\nAdyar Drainage Zone,6.0,42.1,0.19,48\n";
