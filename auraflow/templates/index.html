@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AuraFlow · Water quality monitor</title>
+<meta name="description" content="Enter water sensor readings and see how each monitoring point scores. A demonstration tool.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💧</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #07111f;
+  --panel: #0c1c2f;
+  --field: #091828;
+  --line: #20405c;
+  --text: #e8f2fb;
+  --muted: #8da6bd;
+  --aqua: #4fd6f0;
+  --ok: #3fd9a8;
+  --warn: #f2c14e;
+  --bad: #ff6b81;
+  --display: "Bricolage Grotesque", "Segoe UI", sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html { scroll-padding-top: 1rem; }
+body {
+  margin: 0; background: var(--ink); color: var(--text);
+  font: 400 15px/1.55 var(--body);
+}
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--aqua); outline-offset: 2px; }
+
+.app { display: grid; grid-template-columns: 340px minmax(0, 1fr); min-height: 100vh; }
+.side {
+  background: var(--panel); border-right: 1px solid var(--line);
+  padding: 28px 24px; position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+}
+.main { padding: 36px clamp(20px, 4vw, 56px) 56px; max-width: 1180px; }
+
+.brand { font: 700 1.5rem/1 var(--display); letter-spacing: -.01em; margin: 0 0 6px; }
+.tag { color: var(--muted); margin: 0 0 24px; font-size: .9rem; }
+h2 { font: 700 1.05rem/1.2 var(--display); margin: 0 0 14px; }
+h1 { font: 700 clamp(1.9rem, 3.6vw, 2.8rem)/1.08 var(--display); letter-spacing: -.02em; margin: 0 0 8px; max-width: 18ch; }
+.lede { color: var(--muted); margin: 0; max-width: 56ch; }
+
+form { display: grid; gap: 14px; }
+label { display: grid; gap: 5px; font-size: .85rem; color: var(--muted); font-weight: 500; }
+input[type=text], input[type=number] {
+  background: var(--field); border: 1px solid var(--line); border-radius: 8px;
+  padding: 9px 11px; color: var(--text); width: 100%;
+}
+input:focus { border-color: var(--aqua); }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.btn {
+  border: 1px solid var(--line); background: transparent; border-radius: 8px;
+  padding: 9px 14px; cursor: pointer; font-weight: 500;
+}
+.btn:hover { border-color: var(--aqua); }
+.btn.primary { background: var(--aqua); border-color: var(--aqua); color: #04202b; font-weight: 600; }
+.btn.primary:hover { filter: brightness(1.07); }
+.btn.small { padding: 4px 9px; font-size: .8rem; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; }
+.divider { border: 0; border-top: 1px solid var(--line); margin: 22px 0; }
+.file { display: grid; gap: 6px; }
+.file input { font-size: .85rem; color: var(--muted); }
+.file input::file-selector-button {
+  background: var(--field); border: 1px solid var(--line); color: var(--text);
+  border-radius: 8px; padding: 7px 12px; margin-right: 10px; cursor: pointer;
+}
+.hint { color: var(--muted); font-size: .8rem; margin: 0; }
+
+.status-line { min-height: 1.5em; font-size: .88rem; margin: 14px 0 0; color: var(--aqua); }
+.status-line.err { color: var(--bad); }
+
+.stats { display: grid; grid-template-columns: repeat(4, auto); justify-content: start; margin: 30px 0 34px; }
+.stat { padding: 0 28px; border-left: 1px solid var(--line); }
+.stat:first-child { padding-left: 0; border-left: 0; }
+.stat b { display: block; font: 700 1.9rem/1.1 var(--display); }
+.stat span { color: var(--muted); font-size: .85rem; }
+
+section { margin-bottom: 40px; }
+
+/* The vials: one per monitoring node, filled to its score. */
+.vials { display: flex; gap: 18px; overflow-x: auto; padding: 4px 4px 14px; }
+.vial {
+  all: unset; box-sizing: border-box; cursor: pointer; text-align: center;
+  display: grid; justify-items: center; gap: 8px; width: 96px; flex: none; padding: 6px 4px;
+  border-radius: 10px;
+}
+.vial:focus-visible { outline: 2px solid var(--aqua); outline-offset: 2px; }
+.vial[aria-pressed=true] { background: rgba(79, 214, 240, .08); }
+.tube {
+  width: 46px; height: 150px; border: 2px solid var(--line); border-top-color: transparent;
+  border-radius: 0 0 24px 24px; position: relative; overflow: hidden; background: rgba(255,255,255,.02);
+}
+.vial[aria-pressed=true] .tube { border-color: var(--aqua); border-top-color: transparent; }
+.fill { position: absolute; left: 0; right: 0; bottom: 0; height: 0; transition: height .7s cubic-bezier(.2,.7,.2,1); }
+.fill[data-level=low] { background: var(--ok); }
+.fill[data-level=mid] { background: var(--warn); }
+.fill[data-level=high] { background: var(--bad); }
+.vial .score { font: 700 1.05rem/1 var(--display); }
+.vial .name { font-size: .78rem; color: var(--muted); line-height: 1.25; max-width: 92px; overflow-wrap: anywhere; }
+
+.empty { color: var(--muted); border: 1px dashed var(--line); border-radius: 10px; padding: 22px; margin: 0; }
+
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { color: var(--muted); font-weight: 500; font-size: .8rem; background: var(--panel); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: 0; }
+tbody tr[aria-selected=true] { background: rgba(79, 214, 240, .07); }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 8px; }
+.dot[data-level=low] { background: var(--ok); }
+.dot[data-level=mid] { background: var(--warn); }
+.dot[data-level=high] { background: var(--bad); }
+
+.two { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 32px; }
+.node-name { font: 700 1.5rem/1.2 var(--display); margin: 0 0 4px; overflow-wrap: anywhere; }
+.verdict { font-weight: 600; margin: 0 0 18px; }
+.verdict[data-level=low] { color: var(--ok); }
+.verdict[data-level=mid] { color: var(--warn); }
+.verdict[data-level=high] { color: var(--bad); }
+.params { display: grid; gap: 12px; margin: 0; }
+.param { display: grid; grid-template-columns: 90px 1fr 70px; gap: 12px; align-items: center; font-size: .88rem; }
+.param .bar { height: 7px; background: #15304a; border-radius: 99px; overflow: hidden; }
+.param .bar i { display: block; height: 100%; background: var(--aqua); border-radius: 99px; transition: width .5s ease; }
+.param.driver .bar i { background: var(--warn); }
+.param .val { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+.param.driver b { color: var(--warn); }
+.note { color: var(--muted); font-size: .85rem; margin: 16px 0 0; }
+
+.hash { font: 400 .8rem/1.7 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; overflow-wrap: anywhere; color: #bcd6ea; margin: 0 0 14px; }
+
+.disclaimer { border-left: 3px solid var(--warn); padding: 4px 0 4px 16px; color: var(--muted); font-size: .85rem; max-width: 80ch; }
+.disclaimer b { color: var(--text); }
+
+@media (max-width: 920px) {
+  .app { grid-template-columns: 1fr; }
+  .side { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+  .two { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: repeat(2, auto); row-gap: 18px; }
+  .stat:nth-child(3) { padding-left: 0; border-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fill, .param .bar i { transition: none; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <p class="brand">AuraFlow</p>
+    <p class="tag">Water quality monitor</p>
+
+    <h2>Add a reading</h2>
+    <form id="add-form" autocomplete="off">
+      <label>Monitoring location
+        <input type="text" id="f-location" maxlength="60" placeholder="e.g. Adyar outfall" required>
+      </label>
+      <div class="pair">
+        <label>pH (0–14)
+          <input type="number" id="f-ph" min="0" max="14" step="0.1" value="7.0" required>
+        </label>
+        <label>Turbidity (NTU)
+          <input type="number" id="f-turbidity" min="0" max="10000" step="0.5" value="5" required>
+        </label>
+      </div>
+      <div class="pair">
+        <label>Metals (ppm)
+          <input type="number" id="f-metals" min="0" max="1000" step="0.001" value="0.02" required>
+        </label>
+        <label>BOD (mg/L)
+          <input type="number" id="f-bod" min="0" max="100000" step="0.1" value="12" required>
+        </label>
+      </div>
+      <button class="btn primary" type="submit">Add reading</button>
+    </form>
+    <p class="status-line" id="status" role="status" aria-live="polite"></p>
+
+    <hr class="divider">
+
+    <h2>Import from CSV</h2>
+    <div class="file">
+      <input type="file" id="f-csv" accept=".csv,text/csv" aria-label="Choose a CSV file">
+      <p class="hint">Columns: location, ph, turbidity, metals, bod. Importing replaces the current readings.</p>
+    </div>
+
+    <hr class="divider">
+
+    <div class="row">
+      <button class="btn small" id="b-sample" type="button">Load sample data</button>
+      <button class="btn small" id="b-clear" type="button">Clear all</button>
+    </div>
+    <p class="hint" style="margin-top:12px">Your readings are saved in this browser only. Nobody else can see them.</p>
+  </aside>
+
+  <main class="main">
+    <h1>How clean is each monitoring point?</h1>
+    <p class="lede">Each node gets a score from 0 to 100 based on pH, turbidity, metals and BOD. Higher means worse.</p>
+
+    <div class="stats" id="stats">
+      <div class="stat"><b id="s-total">0</b><span>Nodes</span></div>
+      <div class="stat"><b id="s-avg">0.0%</b><span>Average score</span></div>
+      <div class="stat"><b id="s-mid">0</b><span>Need review</span></div>
+      <div class="stat"><b id="s-high">0</b><span>High risk</span></div>
+    </div>
+
+    <section aria-labelledby="h-nodes">
+      <h2 id="h-nodes">Nodes</h2>
+      <div class="vials" id="vials"></div>
+    </section>
+
+    <section aria-labelledby="h-readings">
+      <h2 id="h-readings">Readings</h2>
+      <div class="tablewrap">
+        <table>
+          <thead><tr>
+            <th>Location</th><th class="num">pH</th><th class="num">Turbidity</th><th class="num">Metals</th>
+            <th class="num">BOD</th><th class="num">Score</th><th>Status</th><th>Response</th><th><span class="sr">Remove</span></th>
+          </tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="two">
+      <section aria-labelledby="h-node">
+        <h2 id="h-node">Selected node</h2>
+        <div id="inspector"></div>
+      </section>
+      <section aria-labelledby="h-hash">
+        <h2 id="h-hash">Data fingerprint</h2>
+        <p class="hash" id="hash">–</p>
+        <button class="btn" id="b-export" type="button">Download report (CSV)</button>
+        <p class="note">The fingerprint is a SHA-256 hash of the readings. Change any value and it changes. It is not a tamper-proof ledger.</p>
+      </section>
+    </div>
+
+    <p class="disclaimer"><b>Demonstration only.</b> The score is a project-defined illustration, not an official BIS formula or a drinking-water safety certification. No sensor or valve is connected. Check limits and control logic with qualified professionals before real-world use.</p>
+  </main>
+</div>
+
+<style>.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}</style>
+
+<script>
+(function () {
+  "use strict";
+  var KEY = "auraflow.readings.v1";
+  var SAMPLE = [
+    { location: "Municipal Intake", ph: 7.2, turbidity: 3.5, metals: 0.02, bod: 12 },
+    { location: "Ambattur Industrial Plant", ph: 9.4, turbidity: 62, metals: 0.52, bod: 92 },
+    { location: "Adyar Drainage Zone", ph: 6.0, turbidity: 42.1, metals: 0.19, bod: 48 }
+  ];
+  var LABELS = { ph: "pH", turbidity: "Turbidity", metals: "Metals", bod: "BOD" };
+  var UNITS = { ph: "", turbidity: " NTU", metals: " ppm", bod: " mg/L" };
+  var DIGITS = { ph: 2, turbidity: 2, metals: 3, bod: 1 };
+
+  var readings = load();
+  var analysis = null;
+  var selected = null; // index into analysis.rows
+  var firstPaint = true;
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  function load() {
+    try {
+      var s = localStorage.getItem(KEY);
+      if (s) {
+        var a = JSON.parse(s);
+        if (Array.isArray(a)) return a;
+      }
+    } catch (e) {}
+    return JSON.parse(JSON.stringify(SAMPLE));
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(readings)); } catch (e) {}
+  }
+
+  function say(msg, isError) {
+    var s = $("status");
+    s.textContent = msg;
+    s.className = "status-line" + (isError ? " err" : "");
+  }
+
+  function api(path, opts) {
+    return fetch(path, opts).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (body) {
+        if (!res.ok) throw new Error(body.error || "The server returned an error (" + res.status + ").");
+        return body;
+      });
+    });
+  }
+
+  function analyse() {
+    return api("/api/analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ readings: readings })
+    }).then(function (data) {
+      analysis = data;
+      readings = data.rows.map(function (r) {
+        return { location: r.location, ph: r.ph, turbidity: r.turbidity, metals: r.metals, bod: r.bod };
+      });
+      save();
+      if (selected == null || selected >= analysis.rows.length) selected = analysis.rows.length - 1;
+      render();
+    }).catch(function (e) {
+      say("Couldn't score the readings: " + e.message, true);
+    });
+  }
+
+  function fmt(key, v) { return Number(v).toFixed(DIGITS[key]); }
+
+  function render() {
+    var rows = analysis.rows, st = analysis.stats;
+    $("s-total").textContent = st.total;
+    $("s-avg").textContent = st.average.toFixed(1) + "%";
+    $("s-mid").textContent = st.caution;
+    $("s-high").textContent = st.high;
+    $("hash").textContent = rows.length ? analysis.sha256 : "–";
+
+    // vials
+    var vials = $("vials");
+    vials.textContent = "";
+    if (!rows.length) {
+      vials.appendChild(el("p", "empty", "No readings yet. Add one on the left, import a CSV, or load the sample data."));
+    }
+    var fills = [];
+    rows.forEach(function (r, i) {
+      var b = el("button", "vial");
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(i === selected));
+      b.setAttribute("aria-label", r.location + ", score " + r.wti.toFixed(1) + " percent, " + r.status);
+      var tube = el("div", "tube");
+      var fill = el("div", "fill");
+      fill.dataset.level = r.level;
+      tube.appendChild(fill);
+      b.appendChild(tube);
+      b.appendChild(el("div", "score", r.wti.toFixed(1) + "%"));
+      b.appendChild(el("div", "name", r.location));
+      b.addEventListener("click", function () { selected = i; render(); });
+      vials.appendChild(b);
+      fills.push([fill, Math.max(r.wti, 3)]);
+    });
+    // Fill after insertion so the height change animates (on first load and on every new score).
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        fills.forEach(function (f) { f[0].style.height = f[1] + "%"; });
+      });
+    });
+
+    // table (newest first)
+    var tbody = $("rows");
+    tbody.textContent = "";
+    rows.map(function (r, i) { return i; }).reverse().forEach(function (i) {
+      var r = rows[i];
+      var tr = el("tr");
+      tr.setAttribute("aria-selected", String(i === selected));
+      var name = el("td", null, r.location);
+      tr.appendChild(name);
+      ["ph", "turbidity", "metals", "bod"].forEach(function (k) {
+        tr.appendChild(el("td", "num", fmt(k, r[k])));
+      });
+      tr.appendChild(el("td", "num", r.wti.toFixed(1) + "%"));
+      var s = el("td");
+      var dot = el("span", "dot"); dot.dataset.level = r.level;
+      s.appendChild(dot); s.appendChild(document.createTextNode(r.status));
+      tr.appendChild(s);
+      tr.appendChild(el("td", null, r.response));
+      var del = el("td");
+      var btn = el("button", "btn small", "Remove");
+      btn.type = "button";
+      btn.setAttribute("aria-label", "Remove " + r.location);
+      btn.addEventListener("click", function () {
+        readings.splice(i, 1);
+        if (selected != null && selected >= i) selected = Math.max(selected - 1, 0);
+        analyse();
+      });
+      del.appendChild(btn);
+      tr.appendChild(del);
+      tr.addEventListener("click", function (ev) {
+        if (ev.target === btn) return;
+        selected = i; render();
+      });
+      tbody.appendChild(tr);
+    });
+
+    renderInspector();
+  }
+
+  function renderInspector() {
+    var box = $("inspector");
+    box.textContent = "";
+    if (!analysis.rows.length || selected == null) {
+      box.appendChild(el("p", "empty", "Select a node to see what is driving its score."));
+      return;
+    }
+    var r = analysis.rows[selected];
+    box.appendChild(el("p", "node-name", r.location));
+    var v = el("p", "verdict", r.status + " · score " + r.wti.toFixed(1) + "%");
+    v.dataset.level = r.level;
+    box.appendChild(v);
+    var list = el("div", "params");
+    ["ph", "turbidity", "metals", "bod"].forEach(function (k) {
+      var row = el("div", "param" + (r.driver === k && r.wti >= 25 ? " driver" : ""));
+      row.appendChild(el("span", null, LABELS[k]));
+      var bar = el("div", "bar"), fill = el("i");
+      fill.style.width = Math.round(r.penalties[k] * 100) + "%";
+      bar.appendChild(fill);
+      row.appendChild(bar);
+      row.appendChild(el("span", "val", fmt(k, r[k]) + UNITS[k]));
+      list.appendChild(row);
+    });
+    box.appendChild(list);
+    var note = r.wti >= 25
+      ? LABELS[r.driver] + " is pushing this score up the most. Suggested simulated response: " + r.response + "."
+      : "All four parameters are within the comfortable range. Suggested simulated response: " + r.response + ".";
+    box.appendChild(el("p", "note", note));
+  }
+
+  // ---- events
+  $("add-form").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var r = {
+      location: $("f-location").value.trim() || "Unnamed node",
+      ph: parseFloat($("f-ph").value),
+      turbidity: parseFloat($("f-turbidity").value),
+      metals: parseFloat($("f-metals").value),
+      bod: parseFloat($("f-bod").value)
+    };
+    if ([r.ph, r.turbidity, r.metals, r.bod].some(function (n) { return !isFinite(n); })) {
+      say("Enter a number in every field.", true);
+      return;
+    }
+    readings.push(r);
+    selected = readings.length - 1;
+    analyse().then(function () {
+      var row = analysis.rows[analysis.rows.length - 1];
+      if (row) say("Added " + row.location + ": score " + row.wti.toFixed(1) + "%, " + row.status + ".");
+      $("f-location").value = "";
+      $("f-location").focus();
+    });
+  });
+
+  $("f-csv").addEventListener("change", function (ev) {
+    var file = ev.target.files[0];
+    if (!file) return;
+    var fd = new FormData();
+    fd.append("file", file);
+    api("/api/import", { method: "POST", body: fd }).then(function (data) {
+      readings = data.readings;
+      selected = null;
+      return analyse().then(function () {
+        say("Imported " + data.readings.length + " reading(s)" + (data.skipped ? "; skipped " + data.skipped + " invalid row(s)." : "."));
+      });
+    }).catch(function (e) {
+      say(e.message, true);
+    }).then(function () { ev.target.value = ""; });
+  });
+
+  $("b-sample").addEventListener("click", function () {
+    readings = JSON.parse(JSON.stringify(SAMPLE)); selected = null;
+    analyse().then(function () { say("Sample data loaded."); });
+  });
+  $("b-clear").addEventListener("click", function () {
+    readings = []; selected = null;
+    analyse().then(function () { say("All readings cleared."); });
+  });
+
+  function csvCell(v) {
+    var s = String(v);
+    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; // stop spreadsheet formula injection
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+  $("b-export").addEventListener("click", function () {
+    if (!analysis || !analysis.rows.length) { say("Nothing to export yet.", true); return; }
+    var head = ["Location", "pH", "Turbidity (NTU)", "Metals (ppm)", "BOD (mg/L)", "Score (%)", "Status", "Simulated response"];
+    var lines = [head.join(",")];
+    analysis.rows.forEach(function (r) {
+      lines.push([r.location, r.ph, r.turbidity, r.metals, r.bod, r.wti, r.status, r.response].map(csvCell).join(","));
+    });
+    var blob = new Blob([lines.join("\n")], { type: "text/csv" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "auraflow-report.csv";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  });
+
+  analyse();
+})();
+</script>
+</body>
+</html>
