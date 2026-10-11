@@ -946,6 +946,154 @@ Adyar Drainage Zone,6.0,42.1,0.19,48</pre>
     say("Report downloaded.");
   });
 
+  // ---------- report document (graph + details)
+  // Paste this block inside the main IIFE in index.html, right before `function downloadTemplate()`.
+  // It uses the existing `analysis`, `say`, `LABELS`, `UNITS` and `fmt` from that script.
+
+  var REPORT_COLORS = { low: "#0a7a58", mid: "#b87a00", high: "#c62d47" };
+
+  function h(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function clip(s, n) { s = String(s); return s.length > n ? s.slice(0, n - 1) + "\u2026" : s; }
+
+  // Horizontal bar chart of risk scores, drawn as inline SVG so it prints and saves cleanly.
+  function scoreChartSvg(rows) {
+    var W = 760, left = 220, right = 50, top = 34, rowH = 34, barH = 20;
+    var plotW = W - left - right, plotH = rows.length * rowH, H = top + plotH + 36;
+    function x(v) { return left + plotW * v / 100; }
+    var s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + " " + H + '" width="100%" role="img" ' +
+      'aria-label="Bar chart of risk scores by monitoring node" font-family="Segoe UI, Arial, sans-serif">';
+    [[0, 25, "#e6f5ef", "Low"], [25, 50, "#fdf3dc", "Caution"], [50, 100, "#fbe5e9", "High risk"]].forEach(function (b) {
+      s += '<rect x="' + x(b[0]) + '" y="' + top + '" width="' + (x(b[1]) - x(b[0])) + '" height="' + plotH + '" fill="' + b[2] + '"/>';
+      s += '<text x="' + (x(b[0]) + x(b[1])) / 2 + '" y="' + (top - 12) + '" text-anchor="middle" font-size="12" fill="#3d5a71">' + b[3] + "</text>";
+    });
+    [0, 25, 50, 75, 100].forEach(function (v) {
+      s += '<line x1="' + x(v) + '" x2="' + x(v) + '" y1="' + top + '" y2="' + (top + plotH) + '" stroke="#a3bccf" stroke-width="1"/>';
+      s += '<text x="' + x(v) + '" y="' + (top + plotH + 16) + '" text-anchor="middle" font-size="11" fill="#3d5a71">' + v + "</text>";
+    });
+    rows.forEach(function (r, i) {
+      var y = top + i * rowH + (rowH - barH) / 2;
+      var w = Math.max(x(r.wti) - left, 2);
+      s += '<text x="' + (left - 10) + '" y="' + (y + barH / 2 + 4) + '" text-anchor="end" font-size="12" fill="#0a2236">' + h(clip(r.location, 30)) + "</text>";
+      s += '<rect x="' + left + '" y="' + y + '" width="' + w + '" height="' + barH + '" rx="3" fill="' + REPORT_COLORS[r.level] + '"/>';
+      s += '<text x="' + (x(r.wti) + 6) + '" y="' + (y + barH / 2 + 4) + '" font-size="12" font-weight="600" fill="#0a2236">' + r.wti.toFixed(1) + "%</text>";
+    });
+    s += '<text x="' + (left + plotW / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="11" fill="#3d5a71">Risk score (0 to 100, higher is worse)</text>';
+    return s + "</svg>";
+  }
+
+  function buildReport() {
+    var rows = analysis.rows.slice().sort(function (a, b) { return b.wti - a.wti; });
+    var st = analysis.stats;
+    var chartRows = rows.slice(0, 25);
+    var o = [];
+    o.push('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">');
+    o.push("<title>AuraFlow water quality report</title><style>");
+    o.push("@page{margin:14mm}*{box-sizing:border-box}body{margin:0;font:14px/1.55 'Segoe UI',Arial,sans-serif;color:#0a2236;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}");
+    o.push(".page{max-width:860px;margin:0 auto;padding:28px 24px 48px}h1{font-size:28px;margin:0 0 4px}h2{font-size:18px;margin:34px 0 10px;border-bottom:2px solid #0b7f9a;padding-bottom:4px}h3{font-size:16px;margin:0 0 4px}");
+    o.push(".meta{color:#3d5a71;margin:0 0 18px}.toolbar{position:sticky;top:0;background:#f2f7fb;border-bottom:1px solid #a3bccf;padding:10px 24px;display:flex;gap:10px}");
+    o.push(".toolbar button{font:inherit;padding:8px 16px;border:1px solid #0b7f9a;border-radius:8px;background:#0b7f9a;color:#fff;cursor:pointer}.toolbar button.alt{background:#fff;color:#0b7f9a}");
+    o.push(".stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}.stat{border:1px solid #a3bccf;border-radius:10px;padding:10px 14px}.stat b{display:block;font-size:24px}.stat span{color:#3d5a71;font-size:12px}");
+    o.push("table{border-collapse:collapse;width:100%;font-size:12.5px;margin:8px 0}th,td{border:1px solid #c5d6e3;padding:6px 8px;text-align:left;vertical-align:top}th{background:#e4eff6}td.n{text-align:right;font-variant-numeric:tabular-nums}");
+    o.push(".chip{display:inline-block;padding:0 9px;border-radius:99px;border:1.5px solid currentColor;font-size:11.5px;font-weight:600;white-space:nowrap}");
+    o.push(".node{border:1px solid #a3bccf;border-radius:12px;padding:16px 18px;margin:16px 0;page-break-inside:avoid;break-inside:avoid}");
+    o.push(".bars{display:grid;gap:7px;margin:10px 0 14px}.bar{display:grid;grid-template-columns:90px 1fr 100px;gap:10px;align-items:center;font-size:12.5px}.track{height:9px;background:#e4eff6;border-radius:99px;overflow:hidden}.track i{display:block;height:100%;background:#0b7f9a;border-radius:99px}.bar.drv .track i{background:#b87a00}.bar.drv span:first-child{font-weight:600;color:#8a5a00}.bar span:last-child{text-align:right;color:#3d5a71}");
+    o.push(".hash{font:12px/1.6 Consolas,Menlo,monospace;word-break:break-all}.note{border-left:3px solid #b87a00;padding:4px 0 4px 14px;color:#3d5a71;font-size:12.5px;margin:18px 0}ol{padding-left:1.3em;margin:6px 0}li{margin-bottom:6px}");
+    o.push("@media print{.noprint{display:none!important}.page{padding:0}h2{page-break-after:avoid}}@media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}}");
+    o.push("</style></head><body>");
+    o.push('<div class="toolbar noprint"><button type="button" id="rp-print">Print / Save as PDF</button><button type="button" class="alt" id="rp-dl">Download as HTML</button></div>');
+    o.push('<div class="page">');
+    o.push("<h1>AuraFlow water quality report</h1>");
+    o.push('<p class="meta">Generated ' + h(new Date().toLocaleString()) + ". " + st.total + " monitoring node(s). Demonstration scores, not an official safety rating.</p>");
+
+    o.push('<div class="stats">');
+    [[st.total, "Nodes"], [st.average.toFixed(1) + "%", "Average score"], [st.caution, "Need review"], [st.high, "High risk"]].forEach(function (s) {
+      o.push('<div class="stat"><b>' + s[0] + "</b><span>" + s[1] + "</span></div>");
+    });
+    o.push("</div>");
+
+    o.push("<h2>Risk score by node</h2>");
+    o.push(scoreChartSvg(chartRows));
+    if (rows.length > chartRows.length) {
+      o.push('<p class="meta">The chart shows the ' + chartRows.length + " highest-scoring nodes of " + rows.length + ". The table below lists all of them.</p>");
+    }
+
+    o.push("<h2>All readings</h2><table><thead><tr><th>Location</th><th>pH</th><th>Turbidity (NTU)</th><th>Metals (ppm)</th><th>BOD (mg/L)</th><th>Score</th><th>Status</th><th>Simulated response</th></tr></thead><tbody>");
+    rows.forEach(function (r) {
+      o.push("<tr><td>" + h(r.location) + '</td><td class="n">' + fmt("ph", r.ph) + '</td><td class="n">' + fmt("turbidity", r.turbidity) +
+        '</td><td class="n">' + fmt("metals", r.metals) + '</td><td class="n">' + fmt("bod", r.bod) + '</td><td class="n"><b>' + r.wti.toFixed(1) +
+        '%</b></td><td style="color:' + REPORT_COLORS[r.level] + ';font-weight:600">' + h(r.status) + "</td><td>" + h(r.response) + "</td></tr>");
+    });
+    o.push("</tbody></table>");
+
+    o.push("<h2>Node details</h2>");
+    rows.forEach(function (r) {
+      var d = r.drink;
+      o.push('<div class="node"><h3>' + h(r.location) + '</h3><p style="margin:0 0 6px"><span class="chip" style="color:' + REPORT_COLORS[r.level] + '">' +
+        h(r.status) + "</span> Score " + r.wti.toFixed(1) + "%. Simulated response: " + h(r.response) + ".</p>");
+      o.push('<div class="bars">');
+      ["ph", "turbidity", "metals", "bod"].forEach(function (k) {
+        var drv = r.driver === k && r.wti >= 25;
+        o.push('<div class="bar' + (drv ? " drv" : "") + '"><span>' + LABELS[k] + '</span><div class="track"><i style="width:' +
+          Math.round(r.penalties[k] * 100) + '%"></i></div><span>' + fmt(k, r[k]) + UNITS[k] + "</span></div>");
+      });
+      o.push("</div>");
+      o.push("<p style=\"margin:0 0 4px\"><b>Drinking check: " + h(d.label) + ".</b> " + h(d.summary) + "</p>");
+      o.push("<table><thead><tr><th>Measurement</th><th>Reading</th><th>Result</th><th>What it means</th></tr></thead><tbody>");
+      d.checks.forEach(function (c) {
+        var col = c.status === "pass" ? REPORT_COLORS.low : (c.status === "check" ? REPORT_COLORS.mid : REPORT_COLORS.high);
+        o.push("<tr><td><b>" + h(c.name) + "</b></td><td>" + h(c.value) + '</td><td><span class="chip" style="color:' + col + '">' +
+          h(c.status.charAt(0).toUpperCase() + c.status.slice(1)) + "</span></td><td>" + h(c.note) + "</td></tr>");
+      });
+      o.push("</tbody></table>");
+      o.push("<p style=\"margin:8px 0 0\"><b>" + (d.level === "low" ? "Before you drink it" : "How to make it safer") + "</b></p><ol>");
+      d.steps.forEach(function (t) { o.push("<li>" + h(t) + "</li>"); });
+      o.push("</ol></div>");
+    });
+
+    o.push("<h2>How the score is calculated</h2>");
+    o.push("<table><thead><tr><th>Measurement</th><th>Share of score</th><th>Reaches its limit at</th></tr></thead><tbody>" +
+      "<tr><td>pH</td><td>20%</td><td>3 units away from 7 (pH 4 or pH 10)</td></tr>" +
+      "<tr><td>Turbidity</td><td>25%</td><td>100 NTU</td></tr>" +
+      "<tr><td>Metals</td><td>35%</td><td>1 ppm</td></tr>" +
+      "<tr><td>BOD</td><td>20%</td><td>150 mg/L</td></tr></tbody></table>");
+    o.push("<p>Each measurement is scaled from 0 to 1 against its limit, squared, weighted and summed. If any single measurement reaches its limit, the score is at least 60. Bands: under 25 low, 25 to 50 caution, over 50 high risk.</p>");
+
+    o.push("<h2>Data fingerprint</h2><p class=\"hash\">SHA-256: " + h(analysis.sha256) + "</p>");
+    o.push('<p class="meta">A hash of the readings in this report. Change any value and it changes. It is not a tamper-proof ledger.</p>');
+    o.push('<p class="note"><b>Demonstration only.</b> The score is a project-defined illustration, not an official BIS formula or a drinking-water safety certification. The drinking check covers four measurements and cannot detect germs or most chemicals. Confirm with an accredited laboratory before relying on any water for drinking.</p>');
+    o.push("</div>");
+    o.push('<script>document.getElementById("rp-print").onclick=function(){window.print();};' +
+      'document.getElementById("rp-dl").onclick=function(){var b=new Blob(["<!doctype html>"+document.documentElement.outerHTML],{type:"text/html"});' +
+      'var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="auraflow-report.html";document.body.appendChild(a);a.click();a.remove();};<\/script>');
+    o.push("</body></html>");
+    return o.join("");
+  }
+
+  function openReport() {
+    if (!analysis || !analysis.rows.length) { say("Add at least one reading before creating a report.", true); return; }
+    var html = buildReport();
+    var w = window.open("", "_blank");
+    if (w) {
+      w.document.open(); w.document.write(html); w.document.close();
+      say("Report opened in a new tab. Use Print / Save as PDF there.");
+    } else {
+      // Pop-up blocked: fall back to a file download.
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([html], { type: "text/html" }));
+      a.download = "auraflow-report.html";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+      say("Report downloaded as an HTML file. Open it and use Print / Save as PDF.");
+    }
+  }
+
+  $("b-report").addEventListener("click", openReport);
+
   function downloadTemplate() {
     var text = "location,ph,turbidity,metals,bod\nMunicipal Intake,7.2,3.5,0.02,12\nAmbattur Industrial Plant,9.4,62,0.52,92\nAdyar Drainage Zone,6.0,42.1,0.19,48\n";
     var a = document.createElement("a");
