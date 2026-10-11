@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="darktheme.jpeg">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -191,6 +191,9 @@ table.ref th, table.ref td { white-space: normal; }
 table.ref caption { text-align: left; color: var(--muted); padding: 0 0 10px; font-size: .9rem; }
 
 
+.btn.icon { width: 44px; padding: 0; }
+.btn.icon svg { width: 22px; height: 22px; display: block; }
+.btn.icon[aria-pressed=true] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 /* facts + guide */
 .facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px 52px; padding: 0; margin: 0 0 28px; list-style: none; }
 .facts li { border-left: 3px solid var(--accent); padding-left: 18px; }
@@ -260,8 +263,8 @@ pre.csv { background: var(--field); border: 1px solid var(--line); border-radius
       <a href="#guide" id="nav-guide">Guide</a>
     </nav>
     <div class="tools">
-      <button class="btn small" id="t-size" type="button" aria-pressed="false">Larger text</button>
-      <button class="btn small" id="t-theme" type="button">Light theme</button>
+      <button class="btn icon" id="t-size" type="button" aria-pressed="false" aria-label="Larger text" title="Larger text"><svg viewBox="0 0 512 512" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="24" y="24" width="464" height="464" rx="16" stroke-width="44"/><path stroke-width="44" d="M92 136V108H300V136M196 108V388M150 388H242"/><path stroke-width="38" d="M312 262V238H426V262M369 238V388M335 388H403"/></svg></button>
+      <button class="btn icon" id="t-theme" type="button" aria-label="Switch to light theme" title="Switch to light theme"><svg id="ic-sun" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><circle cx="256" cy="256" r="128" fill="currentColor"/><g stroke="currentColor" stroke-width="46" stroke-linecap="round"><path d="M256 33V69M256 443V479M33 256H69M443 256H479M98.3 98.3l25.5 25.5M388.2 388.2l25.5 25.5M413.7 98.3l-25.5 25.5M123.8 388.2l-25.5 25.5"/></g></svg><svg id="ic-moon" viewBox="0 0 512 512" aria-hidden="true" focusable="false" hidden><path d="M330 40A222 222 0 1 0 472 330A150 150 0 0 1 330 40Z" fill="currentColor"/></svg></button>
     </div>
   </div>
 </header>
@@ -597,8 +600,11 @@ Adyar Drainage Zone,6.0,42.1,0.19,48</pre>
     var big = root.classList.contains("big");
     $("t-size").setAttribute("aria-pressed", String(big));
     var dark = root.dataset.theme !== "light";
-    $("t-theme").textContent = dark ? "Light theme" : "Dark theme";
-    $("t-theme").setAttribute("aria-label", dark ? "Switch to light theme" : "Switch to dark theme");
+    var label = dark ? "Switch to light theme" : "Switch to dark theme";
+    $("t-theme").setAttribute("aria-label", label);
+    $("t-theme").title = label;
+    $("ic-sun").hidden = !dark;
+    $("ic-moon").hidden = dark;
   }
   $("t-size").addEventListener("click", function () {
     root.classList.toggle("big");
